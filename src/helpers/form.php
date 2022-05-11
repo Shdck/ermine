@@ -164,23 +164,23 @@ class form extends helpers {
     }
 
     /**
-     * @param $name string
-     * @param $value mixed
+     * @param string $name
+     * @param string $value
      * @return $this
      */
-    public function setInputValue($name, $value) {
+    public function setInputValue(string $name, string $value): self {
         $this->setInputAttribute($name, 'value', $value);
 
         return $this;
     }
 
     /**
-     * @param $name string
-     * @param $attributeName string
-     * @param $value mixed
+     * @param string $name
+     * @param string $attributeName
+     * @param string $value
      * @return $this
      */
-    public function setInputAttribute($name, $attributeName, $value) {
+    public function setInputAttribute(string $name, string $attributeName, string $value): self {
         foreach ($this->_inputList as &$input) {
             if ($input['name'] == $name) {
                 $input[$attributeName] = $value;
@@ -190,12 +190,20 @@ class form extends helpers {
 
         return $this;
     }
-    
-    public function getInputs() {
+
+    /**
+     * @return array
+     */
+    public function getInputs(): array {
         return $this->_inputList;
     }
-    
-    public function getInputsByName($name, $type=null) {
+
+    /**
+     * @param string $name
+     * @param string|null $type
+     * @return array
+     */
+    public function getInputsByName(string $name, string $type=null): array {
         $tabInputs = [];
         
         foreach($this->_inputList as $input) {
@@ -207,7 +215,12 @@ class form extends helpers {
         return $tabInputs;
     }
 
-    public function getInputValue($name, $type=null) {
+    /**
+     * @param string $name
+     * @param string|null $type
+     * @return mixed|null
+     */
+    public function getInputValue(string $name, string $type=null) {
         foreach($this->_inputList as $input) {
             if ($input['name'] == $name) {
                return $this->formatInput($input['value'], $type);
@@ -216,8 +229,11 @@ class form extends helpers {
 
         return null;
     }
-    
-    public function isFormValide() {
+
+    /**
+     * @return bool
+     */
+    public function isFormValide(): bool {
         $tabInputs = $this->getInputs();
         $isValid = true;
         
@@ -227,8 +243,13 @@ class form extends helpers {
         
         return $isValid;
     }
-    
-    protected function isInputValide($input, $key) {
+
+    /**
+     * @param array $input
+     * @param string $key
+     * @return bool
+     */
+    protected function isInputValide(array $input, string $key): bool {
         $isValid = true;
         if ($input['validator']) {
             $validatorClass = $input['validator'];

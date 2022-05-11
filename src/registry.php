@@ -23,7 +23,7 @@ class registry {
      * @param mixed $value
      * @return void
      */
-    public static function set($key, $value) {
+    public static function set(string $key, $value) {
         static::$registry[$key] = $value;
     }
 
@@ -31,7 +31,7 @@ class registry {
      * @param $key
      * @return mixed
      */
-    public static function get($key) {
+    public static function get(string $key) {
         return static::$registry[$key];
     }
 

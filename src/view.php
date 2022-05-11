@@ -33,10 +33,10 @@ class view {
 
     /**
      * view constructor.
-     * @param $controllerName string
+     * @param string $controllerName
      * @throws Exception
      */
-    public function __construct($controllerName=null) {
+    public function __construct(string $controllerName=null) {
         if (empty($controllerName)) {
             $this->disableView();
             return;
@@ -57,7 +57,7 @@ class view {
      * @return view
      * @throws Exception
      */
-    public function setViewPath($viewPath) {
+    public function setViewPath(string $viewPath) {
         if (!is_string($viewPath)) {
             throw new Exception('wrong parameter $viewPath. String expected.');
         }
@@ -83,7 +83,7 @@ class view {
      * @return view
      * @throws Exception
      */
-    public function setLayoutPath($layoutPath) {
+    public function setLayoutPath(string $layoutPath) {
         if (!is_string($layoutPath)) {
             throw new Exception('wrong parameter $layoutPath. String expected.');
         }
@@ -105,11 +105,11 @@ class view {
     }
 
     /**
-     * @param $varName string
-     * @param $value mixed
-     * @return view
+     * @param string $varName
+     * @param mixed $value
+     * @return $this
      */
-    public function assign($varName, $value) {
+    public function assign(string $varName, $value): self {
         $this->_viewVars[$varName] = $value;
         
         return $this;
@@ -121,7 +121,7 @@ class view {
      * @return mixed
      */
     public function v($varName) {
-        return (isset($this->_viewVars[$varName]) ? $this->_viewVars[$varName] : null);
+        return ($this->_viewVars[$varName] ?? null);
     }
     
     /**
@@ -200,7 +200,7 @@ class view {
      * @param array $vars
      * @throws Exception
      */
-    public function getPartial($filePath, $vars=[]) {
+    public function getPartial($filePath, array $vars=[]) {
         
         $partial = new partial($filePath);
         
@@ -221,7 +221,7 @@ class view {
      * @return false|string
      * @throws Exception
      */
-    public function getHtml($filePath, $vars=[]) {
+    public function getHtml($filePath, array $vars=[]) {
         ob_start();
         $this->getPartial($filePath, $vars);
         return ob_get_clean();

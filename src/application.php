@@ -44,9 +44,9 @@ class application {
 
     /**
      * @param string $filePath
-     * @return $this
+     * @return application
      */
-    private function loadConfigFile($filePath) {
+    private function loadConfigFile(string $filePath): self {
         if (file_exists($filePath)) {
             $pathInfo =pathinfo($filePath);
             switch (strtolower($pathInfo['extension'])) {
@@ -84,7 +84,7 @@ class application {
      * @param string $filePath
      * @return stdClass
      */
-    private function loadIniFile($filePath) {
+    private function loadIniFile(string $filePath): stdClass {
         if (file_exists($filePath)) {
             // json_decode(json_encode([])) convert array and subarray as stdClass()
             return json_decode(
@@ -106,7 +106,7 @@ class application {
      * @param string $filePath
      * @return stdClass
      */
-    private function loadJsonFile($filePath) {
+    private function loadJsonFile(string $filePath): stdClass {
         if (file_exists($filePath)) {
             return json_decode(file_get_contents($filePath), false);
         }

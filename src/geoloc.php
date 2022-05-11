@@ -11,7 +11,7 @@ class geoloc {
      * @return string
      * @todo tester et debuger
      */
-    function drawCircle($centerLat, $centerLng) {
+    function drawCircle(float $centerLat, float $centerLng): string {
         $zone = null;
 
         if ($centerLat && $centerLng) {

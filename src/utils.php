@@ -2,6 +2,8 @@
 
 namespace ermine;
 
+use JetBrains\PhpStorm\ArrayShape;
+
 class utils {
 
     /**
@@ -12,7 +14,12 @@ class utils {
      * @param string $callback validation des données
      * @return mixed valeur de la variable
      */
-    static function getParameters($varname, $default = null, $table = INPUT_GET, $callback = filterCallback::BASIC_STRING) {
+    static function getParameters(
+        string $varname,
+        string $default=null,
+        int $table=INPUT_GET,
+        string $callback=filterCallback::BASIC_STRING
+    ) {
         $input = filter_input(
             $table,
             $varname,
@@ -35,7 +42,7 @@ class utils {
      * @param int $table table d'input à utiliser ($_GET, $_POST...)
      * @return boolean
      */
-    static function isParametersSubmit($varname, $table = INPUT_GET) {
+    static function isParametersSubmit(string $varname, int $table=INPUT_GET): bool {
         $input = filter_input($table, $varname);
 
         return !is_null($input);
@@ -46,7 +53,7 @@ class utils {
      * @param string $url
      * @return array
      */
-    static function getClassFromUrl($url) {
+    static function getClassFromUrl(string $url): array {
         global $arrRoutes, $app;
 
         $className = null;
@@ -58,7 +65,7 @@ class utils {
                 if (!isset($route['regex'][LANGUAGE]) && !isset($route['regex']['all'])) {
                     continue;
                 }
-                $regex = (isset($route['regex'][LANGUAGE]) ? $route['regex'][LANGUAGE] : $route['regex']['all']);
+                $regex = ($route['regex'][LANGUAGE] ?? $route['regex']['all']);
 
                 if (preg_match('#^' . $regex . '$#', $url, $matches)) {
 
@@ -108,11 +115,7 @@ class utils {
             return null;
         }
 
-        $url = (
-            isset($route['url'][$language]) ?
-                $route['url'][$language] :
-                $route['url']['all']
-        );
+        $url = ($route['url'][$language] ?? $route['url']['all']);
 
         if ($base64Encode) {
             $url = base64_encode($url);
@@ -132,7 +135,7 @@ class utils {
 
         if (is_null($params) && isset($route['params'])) {
             preg_match(
-                '#^' . (isset($route['regex'][LANGUAGE]) ? $route['regex'][LANGUAGE] : $route['regex']['all']) . '$#',
+                '#^' . ($route['regex'][LANGUAGE] ?? $route['regex']['all']) . '$#',
                 utils::getParameters('controller', 'home', INPUT_GET, filterCallback::SYSTEM_STRING),
                 $matches
             );
@@ -182,7 +185,7 @@ class utils {
             return '';
         }
 
-        return (isset($route['title'][$language]) ? $route['title'][$language] : $route['title']['all']);
+        return ($route['title'][$language] ?? $route['title']['all']);
     }
 
     public static function getUrlPageview($routeKey, $language=LANGUAGE) {
@@ -198,7 +201,7 @@ class utils {
             return '';
         }
 
-        return (isset($route['pageview'][$language]) ? $route['pageview'][$language] : $route['pageview']['all']);
+        return ($route['pageview'][$language] ?? $route['pageview']['all']);
     }
 
     /**
@@ -207,7 +210,7 @@ class utils {
      * @param string $spacenameRoot
      * @return string
      */
-    static function getFileFromClass($className, $spacenameRoot) {
+    static function getFileFromClass(string $className, string $spacenameRoot): string {
         return str_replace(
             [
                 '\\',
@@ -225,10 +228,6 @@ class utils {
         return ($nb > 1 ? $plural : $singular);
     }
     
-    static function ifset($resultIfSet, $resultElse=null) {
-        return (isset($resultIfSet) ? $resultIfSet : $resultElse);
-    }
-    
     static function randomPassword($passwordLength=8) {
         $alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
         $pass = []; //remember to declare $pass as an array
@@ -240,23 +239,23 @@ class utils {
     }
 
     /**
-     * @param $dateSystem
-     * @param $locale
+     * @param string $dateSystem
+     * @param string $locale
      * @return false|string
      * @todo format date in function of $locale
      */
-    static function dateFormated($dateSystem, $locale='fr') {
+    static function dateFormated(string $dateSystem, string $locale='fr'): string {
         return date('d/m/Y', strtotime($dateSystem));
     }
 
     /**
      * @param $number
-     * @param $locale
-     * @param $decimals
+     * @param string $locale
+     * @param int $decimals
      * @return string
      * @todo format number in function of $locale
      */
-    static function numberFormated($number, $locale='fr', $decimals=2) {
+    static function numberFormated($number, string $locale='fr', int $decimals=2) {
         return number_format($number, $decimals, ',', ' ');
     }
 
