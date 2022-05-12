@@ -4,7 +4,7 @@ namespace ermine;
 
 use Exception;
 
-class controller {
+abstract class controller {
     
     /**
      * Vue attachée au controller

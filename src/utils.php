@@ -2,9 +2,42 @@
 
 namespace ermine;
 
-use JetBrains\PhpStorm\ArrayShape;
+class utils
+{
 
-class utils {
+    /**
+     * Dump d'une variable
+     * @param $var
+     */
+    static function dump($var)
+    {
+        if (SANDBOX) {
+            echo PHP_EOL;
+            echo(php_sapi_name() != 'cli' ? "<pre>" : '');
+            var_dump($var);
+            echo(php_sapi_name() != 'cli' ? "</pre>" : '');
+            echo PHP_EOL;
+        }
+    }
+
+    /**
+     * Dump d'une exception
+     * @param Exception $e
+     */
+    static function dumpException($e)
+    {
+        if (SANDBOX) {
+            echo "<pre>";
+            echo "<b>" . get_class($e) . ' : ' . $e->getMessage() . "</b>\n";
+            echo "Error in file " . $e->getFile() . ":" . $e->getLine() . "\n";
+            foreach ($e->getTrace() as $trace) {
+                if (isset($trace['file']) && isset($trace['line'])) {
+                    echo "              " . $trace['file'] . ':' . $trace['line'] . "\n";
+                }
+            }
+            echo "</pre>";
+        }
+    }
 
     /**
      * Récupere la valeur d'une variable d'un tableau d'input ($_GET, $_POST...)
@@ -16,10 +49,11 @@ class utils {
      */
     static function getParameters(
         string $varname,
-        string $default=null,
-        int $table=INPUT_GET,
-        string $callback=filterCallback::BASIC_STRING
-    ) {
+        string $default = null,
+        int    $table = INPUT_GET,
+        string $callback = filterCallback::BASIC_STRING
+    )
+    {
         $input = filter_input(
             $table,
             $varname,
