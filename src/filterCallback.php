@@ -1,6 +1,6 @@
 <?php
 
-namespace ermine;
+namespace Ermine;
 
 /** @todo class à revoir (type des arguments et les retours) */
 class filterCallback {

@@ -1,6 +1,6 @@
 <?php
 
-namespace ermine;
+namespace Ermine;
 
 class helpers extends partial {
     

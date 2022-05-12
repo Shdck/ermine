@@ -1,6 +1,6 @@
 <?php
 
-namespace ermine\helpers;
+namespace Ermine\helpers;
 
 use ermine\helpers;
 use Exception;

@@ -1,12 +1,12 @@
 <?php
 
-namespace ermine;
+namespace Ermine;
 
 use ermine\exceptions\configException;
 use Exception;
 use stdClass;
 
-class application
+class Application
 {
 
     const DEFAULT_INI_FILEPATH = '../config/default.ini';
