@@ -2,15 +2,13 @@
 
 namespace Ermine;
 
-use ermine\exceptions\configException;
 use Exception;
 use stdClass;
 
 class Application
 {
 
-    const DEFAULT_INI_FILEPATH = '../config/default.ini';
-    const PROJECT_INI_FILEPATH = '../../../config/application.ini';
+    const DEFAULT_INI_FILEPATH = __DIR__ . '/config/default.ini';
 
     /**
      * Controller de l'application
@@ -19,41 +17,29 @@ class Application
     private $controller;
 
     /**
-     * @param $spaceNameRoot
      * @throws Exception
      */
-    public function __construct($spaceNameRoot = null)
+    public function __construct()
     {
-        $this->init($spaceNameRoot);
+        $this->init();
     }
 
     /**
      * @return void
      * @throws Exception
      */
-    protected function init($spaceNameRoot = null)
+    protected function init()
     {
+        $this->loadConfigFile(static::DEFAULT_INI_FILEPATH);
 
-        $this
-            ->loadConfigFile(static::DEFAULT_INI_FILEPATH)
-            ->loadConfigFile(static::PROJECT_INI_FILEPATH);
-
-        if (!$spaceNameRoot && !isset(registry::get('config')->application->spacenameRoot)) {
-            throw new configException('Space name root not defined');
-        }
-
-        utils::dump($_SERVER);
-
-//        $this->controller = new controller($spaceNameRoot);
-
-        registry::set('application', $this);
+        Registry::set('application', $this);
     }
 
     /**
      * @param string $filePath
-     * @return application
+     * @return self
      */
-    private function loadConfigFile(string $filePath): self
+    public function loadConfigFile(string $filePath): self
     {
         if (file_exists($filePath)) {
             $pathInfo = pathinfo($filePath);
@@ -70,24 +56,53 @@ class Application
         return $this;
     }
 
-    public function getConfig()
+    /**
+     * @return stdClass
+     */
+    public function getConfig(): stdClass
     {
-        $config = registry::get('config');
+        $config = Registry::get('config');
         if (is_null($config)) {
             $config = new stdClass();
-            registry::set('config', $config);
+            Registry::set('config', $config);
         }
 
         return $config;
     }
 
-    public function mergeConfig($ini)
+    /**
+     * @param stdClass $ini
+     * @return void
+     */
+    public function mergeConfig(stdClass $ini)
     {
-        $config = $this->getConfig();
-        foreach ($ini as $key => $value) {
-            $config->$key = $value;
+        Registry::set(
+            'config',
+            $this->mergeObjects(
+                $this->getConfig(),
+                $ini
+            )
+        );
+    }
+
+    private function mergeObjects($objectToMerge, $objectToMergeWith)
+    {
+        if (is_null($objectToMerge)) {
+            $objectToMerge = new stdClass();
         }
-        registry::set('config', $config);
+        foreach ($objectToMergeWith as $key => $value) {
+            if (!isset($objectToMerge->$key)) {
+                $objectToMerge->$key = new stdClass();
+            }
+            switch (gettype($value) . '-' . gettype($objectToMerge->$key)) {
+                case 'object-object':
+                    $objectToMerge->$key = $this->mergeObjects($objectToMerge->$key, $value);
+                    break;
+                default:
+                    $objectToMerge->$key = $value;
+            }
+        }
+        return $objectToMerge;
     }
 
     /**
@@ -128,9 +143,14 @@ class Application
 
     /**
      * @return controller
+     * @throws Exception
      */
     public function getController(): controller
     {
+        if (is_null($this->controller)) {
+            $this->setController(Controller::factory());
+        }
+
         return $this->controller;
     }
 

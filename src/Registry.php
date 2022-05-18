@@ -4,7 +4,8 @@ namespace Ermine;
 
 use Exception;
 
-class registry {
+class Registry
+{
 
     /**
      * @var array
@@ -12,6 +13,7 @@ class registry {
     protected static $registry;
 
     /**
+     * This is a static class, so it can't be instantiated
      * @throws Exception
      */
     public function __construct() {
@@ -28,7 +30,7 @@ class registry {
     }
 
     /**
-     * @param $key
+     * @param string $key
      * @return mixed
      */
     public static function get(string $key) {
