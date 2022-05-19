@@ -25,10 +25,11 @@ class Tools
     /**
      * @param $variable
      */
-    static function dump($variable)
+    static function dump($variable, $indexOfBacktraceToRead = 0)
     {
         echo PHP_EOL;
-        echo(php_sapi_name() != 'cli' ? "<pre>" : '');
+        echo(php_sapi_name() != 'cli' ? '<pre class="erminedump">' : '');
+        echo debug_backtrace()[$indexOfBacktraceToRead]['file'] . ':' . debug_backtrace()[$indexOfBacktraceToRead]['line'] . PHP_EOL;
         var_dump($variable);
         echo(php_sapi_name() != 'cli' ? "</pre>" : '');
         echo PHP_EOL;

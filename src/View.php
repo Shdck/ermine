@@ -102,7 +102,7 @@ class View
     {
         if ($this->isViewRendered()) {
             $viewPath = $this->getViewPath();
-            if (empty($viewFilePath)) {
+            if (empty($viewPath)) {
                 throw new Error404('View file path not set');
             }
 
