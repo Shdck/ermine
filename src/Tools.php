@@ -38,9 +38,10 @@ class Tools
     /**
      * @param Exception $exception
      */
-    static function dumpException($exception)
+    static function dumpException($exception, $indexOfBacktraceToRead = 0)
     {
-        echo "<pre>";
+        echo '<pre class="erminedump">';
+        echo debug_backtrace()[$indexOfBacktraceToRead]['file'] . ':' . debug_backtrace()[$indexOfBacktraceToRead]['line'] . PHP_EOL;
         echo "<b>" . get_class($exception) . ' : ' . $exception->getMessage() . "</b>\n";
         echo "Error in file " . $exception->getFile() . ":" . $exception->getLine() . PHP_EOL;
         foreach ($exception->getTrace() as $trace) {

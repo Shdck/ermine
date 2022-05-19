@@ -3,7 +3,7 @@
 namespace Ermine;
 
 use Ermine\Exceptions\ConfigException;
-use Ermine\Exceptions\Error404;
+use Ermine\Exceptions\Error404Exception;
 use Exception;
 use ReflectionClass;
 
@@ -26,7 +26,7 @@ abstract class Controller
     /**
      * @return Controller
      * @throws ConfigException
-     * @throws Error404
+     * @throws Error404Exception
      */
     public static function factory(): Controller
     {
@@ -68,7 +68,7 @@ abstract class Controller
         );
 
         if (!class_exists($controller)) {
-            throw new Error404('Controller not found: ' . $controller);
+            throw new Error404Exception('Controller not found: ' . $controller);
         }
 
         return new $controller($parameters);
@@ -85,7 +85,7 @@ abstract class Controller
 
     /**
      * @return void
-     * @throws Error404
+     * @throws Error404Exception
      */
     public function action()
     {

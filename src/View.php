@@ -3,7 +3,7 @@
 namespace Ermine;
 
 use Ermine\Exceptions\ConfigException;
-use Ermine\Exceptions\Error404;
+use Ermine\Exceptions\Error404Exception;
 use Exception;
 
 class View
@@ -96,20 +96,20 @@ class View
     /**
      * Render the page
      * @return static
-     * @throws Error404
+     * @throws Error404Exception
      */
     public function render(): View
     {
         if ($this->isViewRendered()) {
             $viewPath = $this->getViewPath();
             if (empty($viewPath)) {
-                throw new Error404('View file path not set');
+                throw new Error404Exception('View file path not set');
             }
 
             if ($this->isLayoutEnabled()) {
                 $layoutPath = $this->getLayoutPath();
                 if (empty($layoutPath)) {
-                    throw new Error404('Layout file path not set');
+                    throw new Error404Exception('Layout file path not set');
                 }
                 require($layoutPath);
             } else {
@@ -163,12 +163,12 @@ class View
     /**
      * @param string $viewPath
      * @return View
-     * @throws Error404
+     * @throws Error404Exception
      */
     public function setViewPath(string $viewPath): View
     {
         if (!file_exists($viewPath)) {
-            throw new Error404('View file not found ' . $viewPath);
+            throw new Error404Exception('View file not found ' . $viewPath);
         }
 
         $this->viewPath = $viewPath;
@@ -186,12 +186,12 @@ class View
     /**
      * @param string $layoutPath
      * @return View
-     * @throws Error404
+     * @throws Error404Exception
      */
     public function setLayoutPath(string $layoutPath): View
     {
         if (!file_exists($layoutPath)) {
-            throw new Error404('Layout file not found ' . $layoutPath);
+            throw new Error404Exception('Layout file not found ' . $layoutPath);
         }
 
         $this->layoutPath = $layoutPath;

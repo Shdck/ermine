@@ -5,7 +5,7 @@ namespace Ermine\Exceptions;
 use Exception;
 use Throwable;
 
-class Error404 extends Exception
+class Error404Exception extends Exception
 {
 
     /**
