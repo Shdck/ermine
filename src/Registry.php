@@ -34,7 +34,7 @@ class Registry
      * @return mixed
      */
     public static function get(string $key) {
-        return static::$registry[$key];
+        return static::$registry[$key] ?? null;
     }
 
 }

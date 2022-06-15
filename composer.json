@@ -7,7 +7,8 @@
   },
   "require": {
     "php": ">=7.0",
-    "ext-json": "*"
+    "ext-json": "*",
+    "ext-pdo": "*"
   },
   "license": "GPL-3.0",
   "minimum-stability": "stable"

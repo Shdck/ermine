@@ -13,6 +13,14 @@ use Exception;
 class Tools
 {
 
+    const METHOD_VARDUMP = 'vardump';
+    const METHOD_ECHO = 'echo';
+
+    /**
+     * @var bool $isStyleDisplayed
+     */
+    protected static $isStyleDisplayed = false;
+
     /**
      * This is a static class, so it can't be instantiated
      * @throws Exception
@@ -23,33 +31,67 @@ class Tools
     }
 
     /**
-     * @param $variable
+     * @param mixed $variable
+     * @param int $indexOfBacktraceToRead
+     * @param null $method
      */
-    static function dump($variable, $indexOfBacktraceToRead = 0)
+    static function dump($variable, int $indexOfBacktraceToRead = 0, $method = null)
     {
+        if (empty($method)) {
+            $method = static::METHOD_VARDUMP;
+        }
+
+        static::displayDumpStyle();
+
         echo PHP_EOL;
         echo(php_sapi_name() != 'cli' ? '<pre class="erminedump">' : '');
+        echo(php_sapi_name() != 'cli' ? '<b>' : '');
         echo debug_backtrace()[$indexOfBacktraceToRead]['file'] . ':' . debug_backtrace()[$indexOfBacktraceToRead]['line'] . PHP_EOL;
-        var_dump($variable);
+        echo(php_sapi_name() != 'cli' ? '</b>' : '');
+        switch ($method) {
+            case static::METHOD_ECHO:
+                echo($variable);
+                break;
+            case static::METHOD_VARDUMP:
+            default:
+                var_dump($variable);
+                break;
+        }
         echo(php_sapi_name() != 'cli' ? "</pre>" : '');
         echo PHP_EOL;
     }
 
     /**
      * @param Exception $exception
+     * @param int $indexOfBacktraceToRead
      */
-    static function dumpException($exception, $indexOfBacktraceToRead = 0)
+    static function dumpException(Exception $exception, int $indexOfBacktraceToRead = 0)
     {
-        echo '<pre class="erminedump">';
-        echo debug_backtrace()[$indexOfBacktraceToRead]['file'] . ':' . debug_backtrace()[$indexOfBacktraceToRead]['line'] . PHP_EOL;
-        echo "<b>" . get_class($exception) . ' : ' . $exception->getMessage() . "</b>\n";
-        echo "Error in file " . $exception->getFile() . ":" . $exception->getLine() . PHP_EOL;
+        $messageToDump = (php_sapi_name() != 'cli' ? '<b>' : '') .
+            get_class($exception) . ' : ' . $exception->getMessage() . PHP_EOL .
+            (php_sapi_name() != 'cli' ? '</b>' : '') .
+            "Error in file " . $exception->getFile() . ":" . $exception->getLine() . PHP_EOL;
         foreach ($exception->getTrace() as $trace) {
             if (isset($trace['file']) && isset($trace['line'])) {
-                echo "              " . $trace['file'] . ':' . $trace['line'] . PHP_EOL;
+                $messageToDump .= "              " . $trace['file'] . ':' . $trace['line'] . PHP_EOL;
             }
         }
-        echo "</pre>";
+        static::dump($messageToDump, $indexOfBacktraceToRead + 1, static::METHOD_ECHO);
+    }
+
+    protected static function displayDumpStyle()
+    {
+        if (!static::$isStyleDisplayed) {
+            echo '<style>
+                pre.erminedump {
+                    border: 1px solid darkgrey;
+                    border-radius: 5px;
+                    background-color: lightgrey;
+                    padding: 5px;
+                }
+            </style>';
+            static::$isStyleDisplayed = true;
+        }
     }
 
     /**
@@ -136,6 +178,7 @@ class Tools
      * @param $passwordLength
      * @return string
      * @todo split $alphabet in several and add options (withMajor, withMinor, withNumber, withSpecial)
+     * @todo should be rewrite
      */
     static function randomPassword($passwordLength = 8)
     {
@@ -153,8 +196,10 @@ class Tools
      * @param string $locale
      * @return false|string
      * @todo format date in function of $locale
+     * @todo should be rewrite
      */
-    static function dateFormated(string $dateSystem, string $locale='fr'): string {
+    static function dateFormatted(string $dateSystem, string $locale = 'fr'): string
+    {
         return date('d/m/Y', strtotime($dateSystem));
     }
 
@@ -164,8 +209,9 @@ class Tools
      * @param int $decimals
      * @return string
      * @todo format number in function of $locale
+     * @todo should be rewrite
      */
-    static function numberFormated($number, string $locale = 'fr', int $decimals = 2)
+    static function numberFormatted($number, string $locale = 'fr', int $decimals = 2)
     {
         return number_format($number, $decimals, ',', ' ');
     }
@@ -175,10 +221,11 @@ class Tools
      * @param $locale
      * @return string
      * @todo format number in function of $locale
+     * @todo should be rewrite
      */
-    static function priceFormated($price, $locale = 'fr')
+    static function priceFormatted($price, $locale = 'fr')
     {
-        return static::numberFormated($price, $locale) . '€';
+        return static::numberFormatted($price, $locale) . '€';
     }
 
 }
