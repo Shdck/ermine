@@ -5,17 +5,17 @@ namespace Ermine;
 use Exception;
 use PDO;
 
+/**
+ * @property array $columns
+ * @property string $tableName
+ * @property string $schema
+ * @todo:
+ * - Generate information_schema traits
+ */
 abstract class ModelMySqlAdapter extends Model
 {
 
-    /** @var [] */
-    protected static $columns;
-
-    /** @var string */
-    protected static $tableName;
-
-    /** @var string */
-    protected static $schema;
+    protected $columnValues = [];
 
     /**
      * @param array $data
@@ -23,12 +23,9 @@ abstract class ModelMySqlAdapter extends Model
      */
     public function __construct($data = [])
     {
-        // We don't use $this->createSqlConnection(); right now.
-        // It will be call only when we need to use it.
-
         // this class must use a mapper
-        if (count(class_uses($this))) {
-            throw new Exception('You must use a ModelMapperTrait in your model.');
+        if (count(class_uses($this)) == 0) {
+            throw new Exception('You must use a mapper trait in your model.');
         }
 
         parent::__construct($data);
@@ -37,7 +34,7 @@ abstract class ModelMySqlAdapter extends Model
     /**
      * @return PDO|null
      */
-    protected static function getSqlConnection()
+    protected static function sqlConnection()
     {
         $config = Registry::get('config');
         $sqlConnection = Registry::get($config->MySql->registryKey);
@@ -51,12 +48,12 @@ abstract class ModelMySqlAdapter extends Model
     {
         $config = Registry::get('config');
 
-        $server = $config->MySql->server;
+        $host = $config->MySql->host;
         $username = $config->MySql->username;
         $password = $config->MySql->password;
         $database = $config->MySql->database;
 
-        $sqlConnection = new PDO("mysql:host=$server;dbname=$database", $username, $password, array(PDO::ATTR_PERSISTENT => false));
+        $sqlConnection = new PDO("mysql:host=$host;dbname=$database", $username, $password, array(PDO::ATTR_PERSISTENT => false));
         $sqlConnection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         Registry::set($config->MySql->registryKey, $sqlConnection);
     }
@@ -78,7 +75,7 @@ abstract class ModelMySqlAdapter extends Model
 
         $list = [];
         try {
-            $sqlConnection = static::getSqlConnection();
+            $sqlConnection = static::sqlConnection();
             $statement = $sqlConnection->prepare($sql);
             $statement->execute($bind);
 
@@ -96,8 +93,8 @@ abstract class ModelMySqlAdapter extends Model
             }
         } catch (Exception $e) {
             throw new Exception(
-                'Sql request generate a Exception ' . $e->getMessage() . PHP_EOL . 'Request:' . PHP_EOL . $sql,
-                $e->getCode(),
+                'Sql request generate a Exception ' . $e->getMessage() . PHP_EOL . 'Request:' . $sql . PHP_EOL . 'Bind:' . var_export($bind, true),
+                0,
                 $e
             );
         }
@@ -110,7 +107,7 @@ abstract class ModelMySqlAdapter extends Model
      */
     public function save()
     {
-        $primaryKey = $this->getPrimaryKeys();
+        $primaryKey = $this->primaryKeys();
         $isPrimaryKeysSet = true;
         foreach ($primaryKey as $key) {
             if (is_null($this->$key)) {
@@ -126,10 +123,13 @@ abstract class ModelMySqlAdapter extends Model
         $this->insert();
     }
 
-    public function setData(array $data): Model
+    protected function initData(array $data): Model
     {
-        foreach ($data as $key => $value) {
-            $this->$key = $value;
+        foreach (static::$columns as $columnName => $columnStructure) {
+            $this->$columnName = $columnStructure['default'];
+        }
+        foreach ($data as $columnName => $value) {
+            $this->$columnName = $value;
         }
         return $this;
     }
@@ -140,12 +140,12 @@ abstract class ModelMySqlAdapter extends Model
     public function __call($name, $arguments)
     {
         if (preg_match('/^get(.+)$/', $name, $matches)) {
-            $column = strtolower($matches[1]);
+            $column = $matches[1];
             return $this->__get($column);
         }
 
         if (preg_match('/^set(.+)$/', $name, $matches)) {
-            $column = strtolower($matches[1]);
+            $column = $matches[1];
             if (isset($arguments[0])) {
                 return $this->__set($column, $arguments[0]);
             }
@@ -160,9 +160,10 @@ abstract class ModelMySqlAdapter extends Model
     public function __get($name)
     {
         if (isset(static::$columns[$name])) {
-            return static::$columns[$name];
+            $columValue = $this->columnValues[$name];
+            return $columValue ?? static::$columns[$name]['default'];
         }
-        throw new Exception($name . ' is not a column of ' . static::getTableName());
+        throw new Exception($name . ' is not a column of ' . static::tableName());
     }
 
     /**
@@ -171,17 +172,19 @@ abstract class ModelMySqlAdapter extends Model
     public function __set($name, $value)
     {
         if (isset(static::$columns[$name])) {
-            static::$columns[$name]['value'] = $value;
+            $this->columnValues[$name] = $value;
             return $this;
         }
-        throw new Exception($name . ' is not a column of ' . static::getTableName());
+        throw new Exception($name . ' is not a column of ' . static::tableName());
     }
 
-    private function getPrimaryKeys(): array
+    private function primaryKeys(): array
     {
-        return array_filter(static::$columns, function ($column) {
-            return $column['primary'] ?? false;
-        });
+        return array_keys(
+            array_filter(static::$columns, function ($column) {
+                return $column['primary'] ?? false;
+            })
+        );
     }
 
     /**
@@ -190,24 +193,26 @@ abstract class ModelMySqlAdapter extends Model
      */
     public function insert()
     {
-        $sql = 'insert into ' . static::getTableName() . ' ';
+        $sql = 'insert into ' . static::tableName() . ' ';
         $sqlColumns = [];
         $sqlValues = [];
         $bind = [];
         foreach (static::$columns as $columnName => $columnStructure) {
             $sqlColumns[] = $columnName;
             $sqlValues[] = ':' . $columnName;
-            $bind[':' . $columnName] = $columnStructure['value'];
+            $bind[':' . $columnName] = $this->__get($columnName);
         }
-        $sql .= '(' . implode(', ', $sqlColumns) . ' values (' . implode(', ', $sqlValues) . ')';
+        $sql .= '(' . implode(', ', $sqlColumns) . ') values (' . implode(', ', $sqlValues) . ')';
         $this->executeSql($sql, $bind, false);
 
         // We need to set the primary key if it is autoincrement
-        $autoIncrementColumn = array_filter(static::$columns, function ($column) {
-            return $column['autoincrement'] ?? false;
-        });
+        $autoIncrementColumn = array_keys(
+            array_filter(static::$columns, function ($column) {
+                return $column['autoincrement'] ?? false;
+            })
+        );
         if ($autoIncrementColumn) {
-            $this->{$autoIncrementColumn[0]} = static::getSqlConnection()->lastInsertId();
+            $this->{$autoIncrementColumn[0]} = static::sqlConnection()->lastInsertId();
         }
     }
 
@@ -217,7 +222,7 @@ abstract class ModelMySqlAdapter extends Model
      */
     public function update()
     {
-        $sql = 'update ' . static::getTableName() . ' set ';
+        $sql = 'update ' . static::tableName() . ' set ';
         $sqlSet = [];
         $sqlWhere = [];
         $bind = [];
@@ -227,7 +232,7 @@ abstract class ModelMySqlAdapter extends Model
             } else {
                 $sqlSet[] = $columnName . ' = :' . $columnName;
             }
-            $bind[':' . $columnName] = $columnStructure['value'];
+            $bind[':' . $columnName] = $this->__get($columnName);
         }
         $sql .= implode(', ', $sqlSet) . ' where ' . implode(' and ', $sqlWhere);
         $this->executeSql($sql, $bind, false);
@@ -235,7 +240,7 @@ abstract class ModelMySqlAdapter extends Model
 
     public static function quote($value)
     {
-        $sqlConnection = static::getSqlConnection();
+        $sqlConnection = static::sqlConnection();
         return $sqlConnection->quote($value);
     }
 
@@ -245,13 +250,13 @@ abstract class ModelMySqlAdapter extends Model
      */
     public function delete()
     {
-        $sql = 'delete from ' . static::getTableName() . ' ';
+        $sql = 'delete from ' . static::tableName() . ' ';
         $sqlWhere = [];
         $bind = [];
         foreach (static::$columns as $columnName => $columnStructure) {
             if (!empty($columnStructure['primary'])) {
                 $sqlWhere[] = $columnName . ' = :' . $columnName;
-                $bind[':' . $columnName] = $columnStructure['value'];
+                $bind[':' . $columnName] = $this->__get($columnName);
             }
         }
         $sql .= 'where ' . implode(' and ', $sqlWhere);
@@ -261,7 +266,7 @@ abstract class ModelMySqlAdapter extends Model
     /**
      * @return string
      */
-    public static function getTableName(): string
+    public static function tableName(): string
     {
         return static::$schema . '.' . static::$tableName;
     }
@@ -274,24 +279,20 @@ abstract class ModelMySqlAdapter extends Model
      * @return static[] Result of the request
      * @throws Exception
      */
-    public static function getList(array $filters = [], array $order = [], int $offset = null, int $limit = null): array
+    public static function list(array $filters = [], array $order = [], int $offset = null, int $limit = null, bool $debug = false): array
     {
         $sqlSelect = [];
         foreach (static::$columns as $columnName => $columnStructure) {
             $sqlSelect[] = '`' . $columnName . '`';
         }
-        $sql = 'select ' . implode(', ', $sqlSelect) . ' from ' . static::getTableName();
+        $sql = 'select ' . implode(', ', $sqlSelect) . ' from ' . static::tableName();
         $sqlWhere = [];
         $bind = [];
         foreach ($filters as $columnName => $value) {
             // If columnName is an integer, we assume this is an expression (my_colum = 1 by example)
-            if (is_integer((string)$columnName)) {
+            if (is_integer($columnName)) {
                 $sqlWhere[] = $value;
                 continue;
-            }
-
-            if (!array_key_exists($columnName, static::$columns)) {
-                throw new Exception($columnName . ' is not a column of ' . static::getTableName());
             }
 
             if (is_null($value)) {
@@ -333,7 +334,7 @@ abstract class ModelMySqlAdapter extends Model
             $sql .= ' ' . $limit;
         }
 
-        return static::executeSql($sql, $bind);
+        return static::executeSql($sql, $bind, true, $debug);
     }
 
     /**
@@ -342,9 +343,9 @@ abstract class ModelMySqlAdapter extends Model
      * @return static|null
      * @throws Exception
      */
-    public static function getFirst(array $filters = [], array $order = [])
+    public static function first(array $filters = [], array $order = [], bool $debug = false)
     {
-        $list = self::getList($filters, $order, 0, 1);
+        $list = self::list($filters, $order, 0, 1, $debug);
 
         return (count($list) ? $list[0] : null);
     }

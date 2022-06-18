@@ -7,7 +7,7 @@ abstract class Model
 
     public function __construct($data = [])
     {
-        $this->setData($data);
+        $this->initData($data);
     }
 
     abstract public function save();
@@ -18,6 +18,6 @@ abstract class Model
      * @param array $data
      * @return Model
      */
-    abstract public function setData(array $data): Model;
+    abstract protected function initData(array $data): Model;
 
 }

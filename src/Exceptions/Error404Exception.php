@@ -16,7 +16,9 @@ class Error404Exception extends Exception
      */
     public function __construct(string $message = "", int $code = 0, Throwable $previous = null)
     {
-        header('HTTP/1.0 404 Not Found');
+        if (!headers_sent()) {
+            header('HTTP/1.0 404 Not Found');
+        }
         echo '<h1>404 Not Found</h1>';
         parent::__construct($message, $code, $previous);
     }

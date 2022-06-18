@@ -3,6 +3,7 @@
 namespace Ermine;
 
 use Exception;
+use Throwable;
 
 /**
  * Class Tools
@@ -35,7 +36,7 @@ class Tools
      * @param int $indexOfBacktraceToRead
      * @param null $method
      */
-    static function dump($variable, int $indexOfBacktraceToRead = 0, $method = null)
+    static function dump($variable, int $indexOfBacktraceToRead = 0, $method = null, $classname = '')
     {
         if (empty($method)) {
             $method = static::METHOD_VARDUMP;
@@ -44,7 +45,7 @@ class Tools
         static::displayDumpStyle();
 
         echo PHP_EOL;
-        echo(php_sapi_name() != 'cli' ? '<pre class="erminedump">' : '');
+        echo(php_sapi_name() != 'cli' ? '<pre class="erminedump' . ($classname ? ' ' . $classname : '') . '">' : '');
         echo(php_sapi_name() != 'cli' ? '<b>' : '');
         echo debug_backtrace()[$indexOfBacktraceToRead]['file'] . ':' . debug_backtrace()[$indexOfBacktraceToRead]['line'] . PHP_EOL;
         echo(php_sapi_name() != 'cli' ? '</b>' : '');
@@ -65,7 +66,7 @@ class Tools
      * @param Exception $exception
      * @param int $indexOfBacktraceToRead
      */
-    static function dumpException(Exception $exception, int $indexOfBacktraceToRead = 0)
+    static function dumpException(Throwable $exception, int $indexOfBacktraceToRead = 0)
     {
         $messageToDump = (php_sapi_name() != 'cli' ? '<b>' : '') .
             get_class($exception) . ' : ' . $exception->getMessage() . PHP_EOL .
@@ -76,7 +77,8 @@ class Tools
                 $messageToDump .= "              " . $trace['file'] . ':' . $trace['line'] . PHP_EOL;
             }
         }
-        static::dump($messageToDump, $indexOfBacktraceToRead + 1, static::METHOD_ECHO);
+
+        static::dump($messageToDump, $indexOfBacktraceToRead + 1, static::METHOD_ECHO, 'ermineexceptiondump');
     }
 
     protected static function displayDumpStyle()
@@ -88,6 +90,9 @@ class Tools
                     border-radius: 5px;
                     background-color: lightgrey;
                     padding: 5px;
+                }
+                pre.ermineexceptiondump {
+                    background-color: lightcoral;
                 }
             </style>';
             static::$isStyleDisplayed = true;

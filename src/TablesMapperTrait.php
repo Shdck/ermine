@@ -2,6 +2,9 @@
 
 namespace Ermine;
 
+/**
+ * @property string $columnName
+ */
 trait TablesMapperTrait
 {
     /** @var [] */
@@ -10,7 +13,6 @@ trait TablesMapperTrait
             'type' => 'varchar',
             'notnull' => true,
             'default' => '',
-            'value' => '',
         ],
     ];
 
@@ -19,9 +21,4 @@ trait TablesMapperTrait
 
     /** @var string */
     protected static $schema = 'information_schema';
-
-    public function getTableName()
-    {
-        return static::$columns['TABLE_NAME']['value'];
-    }
 }
