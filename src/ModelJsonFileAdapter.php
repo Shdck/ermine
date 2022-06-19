@@ -6,7 +6,7 @@ use Exception;
 
 /**
  * @property array $columns
- * @property string jsonFilePath
+ * @property string $filePath
  * @todo:
  * - Generate information_schema traits
  */
@@ -49,8 +49,8 @@ abstract class ModelJsonFileAdapter extends Model
     {
         if (!static::$isLoaded) {
             static::$jsonValues = [];
-            if (file_exists(static::$jsonFilePath)) {
-                $fileContent = file_get_contents(static::$jsonFilePath);
+            if (file_exists(static::fileFullPath())) {
+                $fileContent = file_get_contents(static::fileFullPath());
                 static::$jsonValues = json_decode($fileContent, true);
             }
         }
@@ -60,6 +60,12 @@ abstract class ModelJsonFileAdapter extends Model
             return new $class(static::$jsonValues[$key], $key);
         }
         return (static::$jsonValues[$key] ?? null);
+    }
+
+    private static function fileFullPath(): string
+    {
+        $config = Registry::get('config');
+        return $config->application->root . $config->json->dirPath . static::$filePath;
     }
 
     /**
@@ -74,7 +80,7 @@ abstract class ModelJsonFileAdapter extends Model
         }
 
         static::$jsonValues[$key] = $this->columnValues;
-        file_put_contents(static::$jsonFilePath, json_encode(static::$jsonValues));
+        file_put_contents(static::fileFullPath(), json_encode(static::$jsonValues));
     }
 
     public function getKey()
@@ -104,7 +110,7 @@ abstract class ModelJsonFileAdapter extends Model
         }
 
         unset(static::$jsonValues[$key]);
-        file_put_contents(static::$jsonFilePath, json_encode(static::$jsonValues));
+        file_put_contents(static::fileFullPath(), json_encode(static::$jsonValues));
     }
 
     protected function initData(array $data): Model
