@@ -38,6 +38,10 @@ abstract class ModelJsonFileAdapter extends Model
 
     private function newKey(): int
     {
+        static::loadJson();
+        if (count(static::$jsonValues) == 0) {
+            return 1;
+        }
         return (((int)max(array_keys(static::$jsonValues))) + 1);
     }
 
@@ -47,14 +51,7 @@ abstract class ModelJsonFileAdapter extends Model
      */
     public static function instantiate(string $key)
     {
-        if (!static::$isLoaded) {
-            static::$jsonValues = [];
-            if (file_exists(static::fileFullPath())) {
-                $fileContent = file_get_contents(static::fileFullPath());
-                static::$jsonValues = json_decode($fileContent, true);
-            }
-        }
-
+        static::loadJson();
         if (isset(static::$jsonValues[$key])) {
             $class = get_called_class();
             return new $class(static::$jsonValues[$key], $key);
@@ -62,10 +59,21 @@ abstract class ModelJsonFileAdapter extends Model
         return (static::$jsonValues[$key] ?? null);
     }
 
+    private static function loadJson()
+    {
+        if (!static::$isLoaded) {
+            static::$jsonValues = [];
+            if (file_exists(static::fileFullPath())) {
+                $fileContent = file_get_contents(static::fileFullPath());
+                static::$jsonValues = json_decode($fileContent, true);
+            }
+        }
+    }
+
     private static function fileFullPath(): string
     {
         $config = Registry::get('config');
-        return $config->application->root . $config->json->dirPath . static::$filePath;
+        return $config->application->rootPath . $config->json->dirPath . DIRECTORY_SEPARATOR . static::$filePath;
     }
 
     /**
