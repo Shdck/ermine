@@ -14,22 +14,9 @@ use PDO;
  */
 abstract class ModelMySqlAdapter extends Model
 {
+    use ModelGetterSetterCallerTrait;
 
     protected $columnValues = [];
-
-    /**
-     * @param array $data
-     * @throws Exception
-     */
-    public function __construct($data = [])
-    {
-        // this class must use a mapper
-        if (count(class_uses($this)) == 0) {
-            throw new Exception('You must use a mapper trait in your model.');
-        }
-
-        parent::__construct($data);
-    }
 
     /**
      * @return PDO|null
@@ -132,50 +119,6 @@ abstract class ModelMySqlAdapter extends Model
             $this->$columnName = $value;
         }
         return $this;
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function __call($name, $arguments)
-    {
-        if (preg_match('/^get(.+)$/', $name, $matches)) {
-            $column = $matches[1];
-            return $this->__get($column);
-        }
-
-        if (preg_match('/^set(.+)$/', $name, $matches)) {
-            $column = $matches[1];
-            if (isset($arguments[0])) {
-                return $this->__set($column, $arguments[0]);
-            }
-        }
-
-        throw new Exception($name . " method doesn't exist ");
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function __get($name)
-    {
-        if (isset(static::$columns[$name])) {
-            $columValue = $this->columnValues[$name];
-            return $columValue ?? static::$columns[$name]['default'];
-        }
-        throw new Exception($name . ' is not a column of ' . static::tableName());
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function __set($name, $value)
-    {
-        if (isset(static::$columns[$name])) {
-            $this->columnValues[$name] = $value;
-            return $this;
-        }
-        throw new Exception($name . ' is not a column of ' . static::tableName());
     }
 
     private function primaryKeys(): array
