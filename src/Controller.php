@@ -10,16 +10,18 @@ use ReflectionClass;
 abstract class Controller
 {
 
-    /**
-     * @var View
-     */
+    /** @var View $view */
     public $view;
+
+    /** @var array $parameters */
+    protected $parameters;
 
     /**
      * @throws Exception
      */
-    public function __construct()
+    public function __construct($parameters = [])
     {
+        $this->parameters = $parameters;
         $this->init();
     }
 
@@ -139,6 +141,11 @@ abstract class Controller
     {
         $this->view = $view;
         return $this;
+    }
+
+    public function __get($name)
+    {
+        return $this->parameters[$name] ?? null;
     }
 
 }

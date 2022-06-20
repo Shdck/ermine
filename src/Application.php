@@ -8,8 +8,6 @@ use stdClass;
 class Application
 {
 
-    const DEFAULT_INI_FILEPATH = __DIR__ . '/config/default.ini';
-
     /**
      * Controller de l'application
      * @var controller
@@ -30,8 +28,6 @@ class Application
      */
     protected function init()
     {
-        $this->loadConfigFile(static::DEFAULT_INI_FILEPATH);
-
         Registry::set('application', $this);
     }
 
