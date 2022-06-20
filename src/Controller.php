@@ -88,6 +88,7 @@ abstract class Controller
     /**
      * @return void
      * @throws Error404Exception
+     * @noinspection PhpUnused
      */
     public function action()
     {
@@ -127,6 +128,7 @@ abstract class Controller
 
     /**
      * @return View
+     * @noinspection PhpUnused
      */
     public function getView(): View
     {
