@@ -73,7 +73,7 @@ abstract class ModelJsonFileAdapter extends Model
     private static function fileFullPath(): string
     {
         $config = Registry::get('config');
-        return $config->application->rootPath . $config->json->dirPath . DIRECTORY_SEPARATOR . static::$filePath;
+        return $config->application->rootPath . $config->json->directoryPath . DIRECTORY_SEPARATOR . static::$filePath;
     }
 
     /**

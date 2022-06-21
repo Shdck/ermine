@@ -125,13 +125,13 @@ namespace {$this->namespace};
  */
 trait {$traitName}
 {
-    /** @var [] */
+    /** @var array \$columns */
     protected static \$columns = {$implodedColumnsDescription};
 
-    /** @var string */
+    /** @var string \$tableName */
     protected static \$tableName = '{$table}';
 
-    /** @var string */
+    /** @var string \$schema */
     protected static \$schema = '{$this->schema}';
 }
 PHP;

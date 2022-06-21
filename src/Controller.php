@@ -113,13 +113,13 @@ abstract class Controller
             throw new ConfigException('View extension not set in config files');
         }
 
-        $viewDirPath = $config->application->rootPath . $config->view->path;
+        $viewDirectoryPath = $config->application->rootPath . $config->view->path;
 
         $reflectionClass = new ReflectionClass($this);
         $className = $reflectionClass->getName();
         $classNameSpace = $reflectionClass->getNamespaceName();
         return strtolower(
-            $viewDirPath .
+            $viewDirectoryPath .
             '/' .
             str_replace($classNameSpace . '\\', '', $className) .
             $config->view->extension
