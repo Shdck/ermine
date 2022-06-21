@@ -167,7 +167,7 @@ PHP;
      */
     private function generateSetter(ColumnsService $column): string
     {
-        return ' * @method self set' . $column->getColumnName() .
+        return ' * @method $this set' . $column->getColumnName() .
             '(' . $this->getParameterType($column) . ' $' . $column->getColumnName() . ')';
     }
 
