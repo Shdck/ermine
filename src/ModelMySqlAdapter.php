@@ -241,7 +241,7 @@ abstract class ModelMySqlAdapter extends Model
             if (is_null($value)) {
                 $sqlWhere[] = $columnName . ' is null';
             } elseif (is_bool($value)) {
-                $sqlWhere[] = $columnName . ' = ' . ($value ? 'true' : 'false');
+                $sqlWhere[] = $columnName . ' = ' . ($value ? '1' : '0');
             } elseif (is_array($value)) {
                 if (count($value)) {
                     $sqlWhere[] = $columnName .

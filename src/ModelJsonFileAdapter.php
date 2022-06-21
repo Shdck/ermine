@@ -59,6 +59,81 @@ abstract class ModelJsonFileAdapter extends Model
         return (static::$jsonValues[$key] ?? null);
     }
 
+    /**
+     * @param array $filters - filter to apply to the request (key => value)
+     * @param array $order - order by to apply to the request
+     * @param integer|null $offset - offset to apply to the limit
+     * @param integer|null $limit - limit to apply to the request
+     * @return static[] Result of the request
+     * @throws Exception
+     */
+    public static function list(array $filters = [], array $order = [], int $offset = null, int $limit = null): array
+    {
+        static::loadJson();
+        $list = [];
+        // query the json file
+        foreach (static::$jsonValues as $key => $row) {
+            $rowObject = static::instantiate($key);
+            foreach ($filters as $filterKey => $filterValue) {
+                switch (true) {
+                    case (is_array($filterValue) && in_array($rowObject->$filterKey, $filterValue)):
+                    case (is_null($filterValue) && is_null($rowObject->$filterKey)):
+                    case ($rowObject->$filterKey == $filterValue):
+                        // nothing to do, just check next filter
+                        break;
+                    default:
+                        // filter does not match, skip this row
+                        continue 2;
+                }
+            }
+            $list[] = $rowObject;
+        }
+
+        // order the list
+        for ($i = count($order) - 1; $i >= 0; $i--) {
+            $explodedOrder = explode(' ', $order[$i]);
+            $attribute = $explodedOrder[0];
+            for ($j = 0; $j < count($list); $j++) {
+                $row = $list[$j];
+                for ($k = $j + 1; $k < count($list); $k++) {
+                    $rowToCompare = $list[$k];
+                    $compareResult = $row->$attribute > $rowToCompare->$attribute;
+                    if (isset($explodedOrder[1]) && strtolower($explodedOrder[1]) == 'desc') {
+                        $compareResult = $row->$attribute < $rowToCompare->$attribute;
+                    }
+                    if ($compareResult) {
+                        $list[$j] = $rowToCompare;
+                        $list[$k] = $row;
+                        $row = $list[$j];
+                    }
+                }
+            }
+        }
+
+        // limit the list
+        if (is_null($offset) && !is_null($limit)) {
+            $offset = 0;
+        }
+        if (!is_null($offset) && !is_null($limit)) {
+            $list = array_slice($list, $offset, $limit);
+        }
+
+        return $list;
+    }
+
+    /**
+     * @param array $filters - filter to apply to the request (key => value or expression)
+     * @param array $order - order by to apply to the request
+     * @return static|null
+     * @throws Exception
+     */
+    public static function first(array $filters = [], array $order = [])
+    {
+        $list = self::list($filters, $order, 0, 1);
+
+        return (count($list) ? $list[0] : null);
+    }
+
     private static function loadJson()
     {
         if (!static::$isLoaded) {
