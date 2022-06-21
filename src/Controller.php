@@ -106,6 +106,9 @@ abstract class Controller
         if (!isset($config->application->rootPath)) {
             throw new ConfigException('Root path not set in config files');
         }
+        if (!isset($config->controller->namespace)) {
+            throw new ConfigException('Controller namespace not set in config files');
+        }
         if (!isset($config->view->path)) {
             throw new ConfigException('View path not set in config files');
         }
@@ -121,7 +124,17 @@ abstract class Controller
         return strtolower(
             $viewDirectoryPath .
             '/' .
-            str_replace($classNameSpace . '\\', '', $className) .
+            str_replace(
+                [
+                    trim($config->controller->namespace, '\\') . '\\',
+                    '\\',
+                ],
+                [
+                    '',
+                    '/',
+                ],
+                $className
+            ) .
             $config->view->extension
         );
     }
