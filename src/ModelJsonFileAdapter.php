@@ -56,7 +56,7 @@ abstract class ModelJsonFileAdapter extends Model
             $class = get_called_class();
             return new $class(static::$jsonValues[$key], $key);
         }
-        return (static::$jsonValues[$key] ?? null);
+        return null;
     }
 
     /**
@@ -74,16 +74,16 @@ abstract class ModelJsonFileAdapter extends Model
         // query the json file
         foreach (static::$jsonValues as $key => $row) {
             $rowObject = static::instantiate($key);
-            foreach ($filters as $filterKey => $filterValue) {
+            foreach ($filters as $filterAttribute => $filterValues) {
                 switch (true) {
-                    case (is_array($filterValue) && in_array($rowObject->$filterKey, $filterValue)):
-                    case (is_null($filterValue) && is_null($rowObject->$filterKey)):
-                    case ($rowObject->$filterKey == $filterValue):
+                    case (is_array($filterValues) && in_array($rowObject->$filterAttribute, $filterValues)):
+                    case (is_null($filterValues) && is_null($rowObject->$filterAttribute)):
+                    case ($rowObject->$filterAttribute == $filterValues):
                         // nothing to do, just check next filter
                         break;
                     default:
                         // filter does not match, skip this row
-                        continue 2;
+                        continue 3;
                 }
             }
             $list[] = $rowObject;
@@ -102,8 +102,9 @@ abstract class ModelJsonFileAdapter extends Model
                         $compareResult = $row->$attribute < $rowToCompare->$attribute;
                     }
                     if ($compareResult) {
-                        $list[$j] = $rowToCompare;
-                        $list[$k] = $row;
+                        unset($list[$k]);
+                        array_splice($list, $j, 0, [$rowToCompare]);
+                        $list = array_values($list);
                         $row = $list[$j];
                     }
                 }
