@@ -35,8 +35,9 @@ class Tools
      * @param mixed $variable
      * @param int $indexOfBacktraceToRead
      * @param null $method
+     * @param string $classname
      */
-    static function dump($variable, int $indexOfBacktraceToRead = 0, $method = null, $classname = '')
+    static function dump($variable, int $indexOfBacktraceToRead = 0, $method = null, string $classname = '')
     {
         if (empty($method)) {
             $method = static::METHOD_VARDUMP;
@@ -100,81 +101,74 @@ class Tools
     }
 
     /**
-     * @param $routeKey
-     * @param $params
-     * @param $base64Encode
-     * @param $withDomain
-     * @param $language
-     * @return array|mixed|string|string[]|null
-     * @todo should be rewrite
+     * @param string $routeName
+     * @param array $parameters
+     * @param bool $base64Encode
+     * @param bool $withDomain
+     * @return string|null
+     * @throws Exception
+     * @todo:
+     * - can be improve (what for ([^)]) regex, or (?test1|test2) regex, ...)
+     * - improve if parameter value in route is 'test $1 $2'
      */
-    public static function getUrl($routeKey, $params=null, $base64Encode=false, $withDomain=false, $language=LANGUAGE) {
-        global $arrRoutes;
+    public static function getUrl(string $routeName, array $parameters = [], bool $base64Encode = false, bool $withDomain = false)
+    {
+        $config = Registry::get('config');
 
-        if (!isset($arrRoutes[$routeKey])) {
+        if (!isset($config->routes->$routeName)) {
             return null;
         }
 
-        $route = $arrRoutes[$routeKey];
+        $route = $config->routes->$routeName;
 
-        if (
-            !isset($route['url'][$language]) &&
-            !isset($route['url']['all'])
-        ) {
+        if (!isset($route->regex)) {
             return null;
         }
 
-        $url = ($route['url'][$language] ?? $route['url']['all']);
+        // index parameters and set their values
+        $routeParametersIndexedList = [];
+        foreach ($parameters as $parameterName => $parameterValue) {
+            if (
+                isset($route->$parameterName) &&
+                preg_match('/^\$\d+$/', $route->$parameterName)
+            ) {
+                $routeParametersIndexedList[(int)str_replace('$', '', $route->$parameterName) - 1] = $parameterValue;
+            }
+        }
+
+        // seek in regex parameters. They should be like (\d+) or anything between parenthesis
+        $result = preg_split('/(\(.*\))/U', $route->regex);
+        for ($i = 0; $i < count($result) - 1; $i++) {
+            if (isset($routeParametersIndexedList[$i])) {
+                $result[$i] .= $routeParametersIndexedList[$i];
+            }
+        }
+        $url = rtrim(ltrim(implode('', $result), '^'), '$');
 
         if ($base64Encode) {
             $url = base64_encode($url);
         }
 
-        if ($withDomain) {
-            switch ($language) {
-                case 'en':
-                    $domain = SH_HTTP_ROOT_EN;
-                    break;
-                default:
-                    $domain = SH_HTTP_ROOT_FR;
-            }
+        if ($withDomain && isset($config->url->domain)) {
+            $domain = $config->url->domain;
 
             $url = rtrim($domain, '/') . $url;
         }
-
-        if (is_null($params) && isset($route['params'])) {
-            preg_match(
-                '#^' . ($route['regex'][LANGUAGE] ?? $route['regex']['all']) . '$#',
-                tools::getParameters('controller', 'home', INPUT_GET, filterCallback::SYSTEM_STRING),
-                $matches
-            );
-            if (!empty($matches)) {
-                foreach ($route['params'] as $paramName => $param) {
-                    if (substr($param, 0, 1) == '$') {
-                        $url = str_replace(
-                            '%' . $paramName . '%',
-                            $matches[substr($param, 1)],
-                            $url
-                        );
-                    }
-                }
-            }
-        }
-
-        if (!is_null($params)) {
-            foreach ($params as $paramName => $paramValue) {
-                $url = str_replace(
-                    '%' . $paramName . '%',
-                    $paramValue,
-                    $url
-                );
-            }
+        if ($withDomain && !isset($config->url->domain)) {
+            throw new Exception('Domain is not set in config file.');
         }
 
         return $url;
     }
 
-    static function plural($nb, $singular, $plural)
+    /**
+     * @param int $nb
+     * @param string $singular
+     * @param string $plural
+     * @return string
+     * @todo: write tests
+     */
+    static function plural(int $nb, string $singular, string $plural): string
     {
         return ($nb > 1 ? $plural : $singular);
     }

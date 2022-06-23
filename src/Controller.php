@@ -36,6 +36,12 @@ abstract class Controller
         $config = Registry::get('config');
         $controller = null;
         $parameters = [];
+        /**
+         * @todo:
+         * - add method attribute in route
+         * - check if $_SERVER['REQUEST_METHOD'] == route method (use strtolower to compare)
+         * - no check if route method attribute is not set
+         */
         foreach ($config->routes as $route) {
             if (
                 isset($route->regex) &&
