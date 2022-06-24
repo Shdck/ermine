@@ -105,11 +105,17 @@ class View
             if (empty($viewPath)) {
                 throw new Error404Exception('View file path not set');
             }
+            if (!file_exists($viewPath)) {
+                throw new Error404Exception('View file not found ' . $viewPath);
+            }
 
             if ($this->isLayoutEnabled()) {
                 $layoutPath = $this->getLayoutPath();
                 if (empty($layoutPath)) {
                     throw new Error404Exception('Layout file path not set');
+                }
+                if (!file_exists($layoutPath)) {
+                    throw new Error404Exception('Layout file not found ' . $viewPath);
                 }
                 require($layoutPath);
             } else {
@@ -167,10 +173,6 @@ class View
      */
     public function setViewPath(string $viewPath): View
     {
-        if (!file_exists($viewPath)) {
-            throw new Error404Exception('View file not found ' . $viewPath);
-        }
-
         $this->viewPath = $viewPath;
         return $this;
     }
