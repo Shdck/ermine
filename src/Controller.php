@@ -34,6 +34,14 @@ abstract class Controller
     {
         $redirectUrl = $_SERVER['REDIRECT_URL'] ?? null;
         $config = Registry::get('config');
+
+        // Put default route at the end of the list
+        if (isset($config->routes->default)) {
+            $defaultRoute = $config->routes->default;
+            unset($config->routes->default);
+            $config->routes->default = $defaultRoute;
+        }
+
         $controller = null;
         $parameters = [];
         /**
@@ -126,10 +134,7 @@ abstract class Controller
 
         $reflectionClass = new ReflectionClass($this);
         $className = $reflectionClass->getName();
-        $classNameSpace = $reflectionClass->getNamespaceName();
-        return strtolower(
-            $viewDirectoryPath .
-            '/' .
+        return $viewDirectoryPath . DIRECTORY_SEPARATOR .
             str_replace(
                 [
                     trim($config->controller->namespace, '\\') . '\\',
@@ -137,12 +142,11 @@ abstract class Controller
                 ],
                 [
                     '',
-                    '/',
+                    DIRECTORY_SEPARATOR,
                 ],
                 $className
             ) .
-            $config->view->extension
-        );
+            $config->view->extension;
     }
 
     /**
